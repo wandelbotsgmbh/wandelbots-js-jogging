@@ -1,9 +1,13 @@
 import React from "react"
-import { Grid, Stack, useTheme } from "@mui/material"
+import { useTheme } from "@mui/material"
 import { useActiveRobot, useWandelApp } from "../../WandelAppContext"
-import { JoggingPanel } from "@wandelbots/wandelbots-js-react-components"
+import {
+  JoggingPanel,
+  SafetyBar,
+} from "@wandelbots/wandelbots-js-react-components"
+import { observer } from "mobx-react-lite"
 
-export const JoggingUI = () => {
+export const JoggingUI = observer(() => {
   const wandelApp = useWandelApp()
   const activeRobot = useActiveRobot()
   const theme = useTheme()
@@ -16,10 +20,16 @@ export const JoggingUI = () => {
         width: "100%",
       }}
     >
+      <SafetyBar
+        isVirtual={activeRobot.isVirtual}
+        motionGroupId={activeRobot.motionGroupId}
+        operationMode={activeRobot.controllerState.operation_mode}
+        safetyState={activeRobot.controllerState.safety_state}
+      />
       <JoggingPanel
         nova={wandelApp.nova}
         motionGroupId={activeRobot.motionGroupId}
       />
     </div>
   )
-}
+})
