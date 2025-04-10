@@ -3,13 +3,3 @@ WANDELAPI_BASE_URL="{{ .InstanceInformation.NovaApiHost }}" # e.g. http://172.30
 
 # The cell on the service manager the robot pad will try to connect to
 CELL_ID="{{ .InstanceInformation.CellName }}"
-
-###
-# SECRETS
-#
-# These should never be defined in the .env file, only in the gitignored .env.local or 
-# in the environment variables of the deployment.
-###
-
-# For basic auth with the API
-NOVA_ACCESS_TOKEN="{{ .InstanceInformation.AccessToken }}"
