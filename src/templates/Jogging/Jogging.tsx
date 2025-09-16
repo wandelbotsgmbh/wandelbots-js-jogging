@@ -1,17 +1,17 @@
 import React from "react"
 import { Jogging3DCanvas } from "./Jogging3DCanvas"
 import { JoggingUI } from "./JoggingUI"
-import { Grid } from "@mui/material"
+import { Box } from "@mui/material"
 
 export const Jogging = () => {
   return (
-    <Grid container style={{ height: "100vh" }}>
-      <Grid item xs={8}>
+    <Box sx={{ display: "flex", height: "100vh" }}>
+      <Box sx={{ flex: 2 }}>
         <Jogging3DCanvas />
-      </Grid>
-      <Grid item xs={4}>
+      </Box>
+      <Box sx={{ flex: 1 }}>
         <JoggingUI />
-      </Grid>
-    </Grid>
+      </Box>
+    </Box>
   )
 }

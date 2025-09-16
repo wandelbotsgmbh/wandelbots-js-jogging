@@ -1,11 +1,13 @@
-import React from "react"
 import { useTheme } from "@mui/material"
 import { useActiveRobot, useWandelApp } from "../../WandelAppContext"
 import {
   JoggingPanel,
   SafetyBar,
+  PoseCartesianValues,
+  PoseJointValues,
 } from "@wandelbots/wandelbots-js-react-components"
 import { observer } from "mobx-react-lite"
+import type { Joints } from "@wandelbots/nova-js/v1"
 
 export const JoggingUI = observer(() => {
   const wandelApp = useWandelApp()
@@ -29,6 +31,31 @@ export const JoggingUI = observer(() => {
       <JoggingPanel
         nova={wandelApp.nova}
         motionGroupId={activeRobot.motionGroupId}
+      />
+
+      <PoseCartesianValues
+        tcpPose={(() => {
+          const motionState = activeRobot.rapidlyChangingMotionState
+          const state = motionState?.state
+          const tcpPose = state?.tcp_pose
+
+          const pose = tcpPose || {
+            tcp: "TCP1",
+            position: { x: 0, y: 0, z: 0 },
+            orientation: { x: 0, y: 0, z: 0 },
+          }
+          return pose
+        })()}
+      />
+      <PoseJointValues
+        joints={(() => {
+          const motionState = activeRobot.rapidlyChangingMotionState
+          const state = motionState?.state
+          const joints = state?.joint_position
+
+          const pose = joints || ({ joints: [0, 0, 0, 0, 0, 0] } as Joints)
+          return pose
+        })()}
       />
     </div>
   )

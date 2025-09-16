@@ -7,7 +7,6 @@ import { makeAutoObservable } from "mobx"
 import type { ConnectedMotionGroup } from "@wandelbots/nova-js/v1"
 import { ProgramStateConnection } from "@wandelbots/nova-js/v1"
 import type { NovaClient } from "@wandelbots/nova-js/v1"
-
 export type MotionGroupOption = {
   selectionId: string
 } & MotionGroupPhysical
