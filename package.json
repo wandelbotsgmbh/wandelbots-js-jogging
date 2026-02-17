@@ -31,7 +31,7 @@
     "@next/env": "15.4.1",
     "@react-three/drei": "^10.5.1",
     "@toolpad/core": "^0.16.0",
-    "@wandelbots/nova-js": "^2.0.2",
+    "@wandelbots/nova-js": "^3.5.1",
     "@wandelbots/wandelbots-js-react-components": "^2.41.0-pr.feature-seperate-timer.383.4d0d430",
     "axios": "^1.13.5",
     "i18next": "^25.4.1",
