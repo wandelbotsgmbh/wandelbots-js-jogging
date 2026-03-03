@@ -15,6 +15,7 @@ export const useWandelApp = () => {
 
 export function useActiveRobot() {
   const { activeRobot } = useWandelApp()
+
   if (!activeRobot) {
     throw new Error("Expected active robot")
   }
