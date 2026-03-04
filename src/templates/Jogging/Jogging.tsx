@@ -2,8 +2,9 @@ import React from "react"
 import { Jogging3DCanvas } from "./Jogging3DCanvas"
 import { JoggingUI } from "./JoggingUI"
 import { Box } from "@mui/material"
+import { observer } from "mobx-react-lite"
 
-export const Jogging = () => {
+export const Jogging = observer(() => {
   return (
     <Box sx={{ display: "flex", height: "100vh" }}>
       <Box sx={{ flex: 2 }}>
@@ -14,4 +15,4 @@ export const Jogging = () => {
       </Box>
     </Box>
   )
-}
+})

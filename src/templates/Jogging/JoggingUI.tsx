@@ -1,41 +1,35 @@
+import { useMemo } from "react"
+import { observer } from "mobx-react-lite"
 import { useTheme } from "@mui/material"
-import { useActiveRobot, useWandelApp } from "../../WandelAppContext"
+
 import {
   JoggingPanel,
-  SafetyBar
+  PoseCartesianValues,
+  PoseJointValues,
+  SafetyBar,
 } from "@wandelbots/wandelbots-js-react-components"
-import { observer } from "mobx-react-lite"
-import type { Joints } from "@wandelbots/nova-js/v1"
-import { getNovaClientV2 } from "@/getWandelApi"
-import { useMemo } from "react"
-import { PoseCartesianValues } from "./PoseCartesianValues"
-import { PoseJointValues } from "@/templates/Jogging/PoseJointValues"
+import type { Pose } from "@wandelbots/nova-js/v2"
+
+import { useActiveRobot, useWandelApp } from "../../WandelAppContext"
 
 export const JoggingUI = observer(() => {
   const activeRobot = useActiveRobot()
   const { selectedMotionGroupId  } = useWandelApp()
   const theme = useTheme()
 
-  const novaV2 = getNovaClientV2()
-
-  const tcpPose = useMemo(() => {
-    const motionState = activeRobot.rapidlyChangingMotionState
-    const state = motionState?.state
-    const tcpPose = state?.tcp_pose
-
-    const pose = tcpPose || {
-      tcp: "TCP1",
-      position: { x: 0, y: 0, z: 0 },
-      orientation: { x: 0, y: 0, z: 0 },
-    }
-    return pose
-  }, [activeRobot])
+  const tcpPose = useMemo<Pose>(() => {
+    return (
+      activeRobot.rapidlyChangingMotionState.tcp_pose ?? {
+        position: [0,0,0],
+        orientation: [0,0,0],
+      }
+    )
+  }, [activeRobot.rapidlyChangingMotionState])
 
   const jointsPose = useMemo(() => {
     const motionState = activeRobot.rapidlyChangingMotionState
-    const state = motionState?.state
-    return state?.joint_position.joints
-  }, [activeRobot])
+    return motionState?.joint_position
+  }, [activeRobot.rapidlyChangingMotionState])
 
   return (
     <div
@@ -52,10 +46,14 @@ export const JoggingUI = observer(() => {
         safetyState={activeRobot.controllerState.safety_state}
       />
       {selectedMotionGroupId && (
-        <JoggingPanel nova={novaV2} motionGroupId={selectedMotionGroupId} />
+        <JoggingPanel
+          nova={activeRobot.nova}
+          motionGroupId={selectedMotionGroupId}
+        />
       )}
-      <PoseCartesianValues pose={tcpPose} />
-      <PoseJointValues pose={jointsPose} />
+      <PoseCartesianValues tcpPose={tcpPose} />
+
+      <PoseJointValues joints={jointsPose} />
     </div>
   )
 })

@@ -1,6 +1,6 @@
 "use client"
 
-import { getNovaClient } from "../../getWandelApi"
+import { getNovaClient, getNovaClientV2 } from "../../getWandelApi"
 import { observer, useLocalObservable } from "mobx-react-lite"
 import { useEffect, type ReactNode } from "react"
 import { LoadingScreen } from "./LoadingScreen"
@@ -9,6 +9,7 @@ import { WandelAppContext } from "../../WandelAppContext"
 
 export const WandelAppLoader = observer((props: { children: ReactNode }) => {
   const nova = getNovaClient()
+  const novaV2 = getNovaClientV2()
 
   const state = useLocalObservable(() => ({
     loading: "Initializing" as string | null,
@@ -34,7 +35,14 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
 
     let controllersRes
     try {
+      /**
+       * TODO "The v2 endpoint currently only lists the names of connected controllers, not their configurations.
+       *  If you need the configuration of a controller, please use the v endpoint for now."
+       *  https://docs.wandelbots.io/26.1/api-maintained/migrationguide#use-v1-endpoints-for-these-functionalities
+       */
       controllersRes = await nova.api.controller.listControllers()
+
+      console.log(controllersRes)
     } catch (error) {
       console.error("Error: No connection to WandelAPI")
     }
@@ -43,7 +51,7 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
 
     console.log(`Available controllers:\n  `, availableControllers)
 
-    state.wandelApp = new WandelApp(nova, availableControllers)
+    state.wandelApp = new WandelApp(novaV2, availableControllers)
 
     if (!state.wandelApp.selectedMotionGroupId) {
       // No saved motion group, try to select the first available
@@ -55,7 +63,9 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
     }
 
     state.nowLoading(`Connecting programs runner`)
-    state.wandelApp.startProgramRunner()
+    // TODO v2 check
+    // state.wandelApp.startProgramRunner()
+
   }
 
   async function tryLoadWandelApp() {

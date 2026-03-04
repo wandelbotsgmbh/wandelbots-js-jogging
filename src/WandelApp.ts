@@ -4,14 +4,16 @@ import type {
 } from "@wandelbots/nova-api/v1"
 import { flatten, keyBy } from "lodash-es"
 import { makeAutoObservable } from "mobx"
-import type { ConnectedMotionGroup, NovaClient } from "@wandelbots/nova-js/v1"
-import { ProgramStateConnection } from "@wandelbots/nova-js/v1"
+import type { ConnectedMotionGroup } from "@wandelbots/nova-js/v1"
+import { NovaClient, type RobotControllerState } from "@wandelbots/nova-js/v2"
 import { getNovaClientV2 } from "@/getWandelApi"
 import {
   JointTypeEnum,
   type DHParameter,
   type KinematicModel,
 } from "@wandelbots/nova-js/v2"
+import { ActiveRobot } from "@/ActiveRobot"
+import { tryParseJson } from "@wandelbots/nova-js"
 
 /**
  * Main store for the current state of the robot pad.
@@ -19,16 +21,13 @@ import {
 export class WandelApp {
   selectedMotionGroupId: string | null = null
 
-  programRunner: ProgramStateConnection | null = null
+  // TODO v2 check
+  //programRunner: ProgramStateConnection | null = null
 
   /**
    * Represents the current state of the selected motion group
    * after setup and websocket connection */
-  activeRobot: ConnectedMotionGroup | null = null
-
-  inverseSolver: string | null | undefined = undefined
-  dhParameters: DHParameter[] = []
-  jointType: JointTypeEnum = JointTypeEnum.RevoluteJoint
+  activeRobot: ActiveRobot | null = null
 
   constructor(
     readonly nova: NovaClient,
@@ -63,47 +62,51 @@ export class WandelApp {
   }
 
   async selectMotionGroup(motionGroupId: string) {
-    this.activeRobot = await this.nova.connectMotionGroup(motionGroupId)
     this.selectedMotionGroupId = motionGroupId
 
     const modelFromController =
       this.motionGroupOptionsById[motionGroupId].model_from_controller
 
-    await this.fetchKinematicModel(modelFromController)
-  }
+    const controller = this.availableControllers.find((controller) => {
+      return controller.physical_motion_groups.some(
+        (motionGroup) => motionGroup.motion_group === motionGroupId,
+      )
+    })
 
-  async startProgramRunner() {
-    this.programRunner = new ProgramStateConnection(this.nova)
-  }
-
-  /**
-   * Fetches the kinematic model for the motion group from the API.
-   */
-  async fetchKinematicModel(modelFromController: string) {
-    const novaV2 = getNovaClientV2()
-
-    try {
-      const { inverse_solver, dh_parameters }: KinematicModel =
-        await novaV2.api.motionGroupModels.getMotionGroupKinematicModel(
-          modelFromController!,
-        )
-
-      this.inverseSolver = inverse_solver
-
-      this.dhParameters = dh_parameters ?? []
+    if (controller) {
+      // Open the websocket to monitor controller state for e.g. e-stop
+      const controllerStateSocket = this.nova.openReconnectingWebsocket(
+        `/controllers/${controller.controller}/state-stream`,
+      )
 
       /**
-       * TODO as soon as V2 api migration is done, the setting of the DEFAULT RevoluteJoint value should be
-       *  deleted, cause the type property is expected to be always delivered. It is not the case in the V1 at the
-       *  moment. "this.jointType = dh_parameters[0]?.type" is the desired assign.
+       * Wait for the first message to get the initial state
        */
-      if (dh_parameters?.length) {
-        this.jointType = dh_parameters[0]?.type ?? JointTypeEnum.RevoluteJoint
-      }
-    } catch (err) {
-      console.warn(
-        `Failed to fetch kinematic model from API for ${modelFromController}, falling back to local config`,
+      const firstControllerMessage = await controllerStateSocket.firstMessage()
+      const initialControllerState = tryParseJson(firstControllerMessage.data)
+        ?.result as RobotControllerState
+
+      /**
+       * Wait for the kinematic model of the robot before setting it as active
+       * and triggering the render
+       */
+      const activeRobot = new ActiveRobot(
+        this.nova,
+        modelFromController,
+        motionGroupId,
+        this.motionGroupOptionsById[motionGroupId].controller_configuration,
+        initialControllerState,
+        controllerStateSocket,
       )
+
+      await activeRobot.fetchKinematicModel(modelFromController)
+
+      this.activeRobot = activeRobot
     }
   }
+
+  // TODO v2 check if needed at all
+  // async startProgramRunner() {
+  //   this.programRunner = new ProgramStateConnection(this.nova)
+  // }
 }
