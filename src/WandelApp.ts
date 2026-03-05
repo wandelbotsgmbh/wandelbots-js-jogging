@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx"
-import { NovaClient, type RobotControllerState } from "@wandelbots/nova-js/v2"
+import type { NovaClient, RobotControllerState } from "@wandelbots/nova-js/v2"
 import { ActiveRobot } from "@/ActiveRobot"
 import { tryParseJson } from "@wandelbots/nova-js"
 
@@ -37,14 +37,6 @@ export class WandelApp {
     this.controllerKind = controllerKind
 
     if (controller && motionGroupId && modelFromController) {
-      /**
-       * Fetch motion group description from the API
-       */
-      try {
-      } catch (error) {
-        console.error("Error: No connection to WandelAPI")
-      }
-
       /**
        * Open the websocket to monitor controller state for e.g. e-stop
        */

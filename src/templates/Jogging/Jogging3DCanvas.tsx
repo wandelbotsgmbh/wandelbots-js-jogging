@@ -10,6 +10,7 @@ import {
 import { useActiveRobot } from "@/WandelAppContext"
 import { observer } from "mobx-react-lite"
 import { env } from "@/runtimeEnv"
+import { getSecureUrl } from "@/getWandelApi"
 
 export const  Jogging3DCanvas: React.FC = observer(()=>  {
   Object3D.DEFAULT_UP = new Vector3(0, 0, 1)
@@ -43,7 +44,7 @@ export const  Jogging3DCanvas: React.FC = observer(()=>  {
           rapidlyChangingMotionState={activeRobot.rapidlyChangingMotionState}
           modelFromController={activeRobot.modelFromController}
           dhParameters={activeRobot.dhParameters}
-          instanceUrl={env.WANDELAPI_BASE_URL ?? ''}
+          instanceUrl={getSecureUrl(env.WANDELAPI_BASE_URL || "")}
           inverseSolver={activeRobot.inverseSolver}
         />
         <group

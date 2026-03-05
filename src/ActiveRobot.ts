@@ -38,7 +38,7 @@ export class ActiveRobot {
    * state socket
    */
   lastValidStateMessage: SocketMessage
-  lastInvalidStateMessage: SocketMessage
+  lastInvalidStateMessage: SocketMessage | null = null
 
   constructor(
     readonly nova: NovaClient,
@@ -81,7 +81,7 @@ export class ActiveRobot {
      * as well as safety state and operation mode
      */
     controllerStateSocket.addEventListener("message", (event) => {
-      const data = tryParseJson(event.data)?.result as RobotControllerState
+      const data = tryParseJson(event.data)?.result
 
       if (!data || !data.motion_groups) {
         runInAction(() => {

@@ -3,7 +3,7 @@ import { env } from "./runtimeEnv"
 
 let nova: NovaClient | null = null
 
-const getSecureUrl = (url: string): string => {
+export const getSecureUrl = (url: string): string => {
     if (!url) {
         return url;
     }

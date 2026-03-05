@@ -21,7 +21,7 @@ export const Jogging = observer(() => {
           width: "30%",
           overflow: "auto",
           borderRadius: "16px",
-          height: "calc(100%  12px)",
+          height: "calc(100% - 12px)",
           marginTop: "6px",
         }}
       >
