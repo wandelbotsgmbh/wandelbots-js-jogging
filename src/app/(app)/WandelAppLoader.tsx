@@ -1,6 +1,6 @@
 "use client"
 
-import { getNovaClient, getNovaClientV2 } from "../../getWandelApi"
+import { getNovaClient } from "../../getWandelApi"
 import { observer, useLocalObservable } from "mobx-react-lite"
 import { useEffect, type ReactNode } from "react"
 import { LoadingScreen } from "./LoadingScreen"
@@ -9,7 +9,6 @@ import { WandelAppContext } from "../../WandelAppContext"
 
 export const WandelAppLoader = observer((props: { children: ReactNode }) => {
   const nova = getNovaClient()
-  const novaV2 = getNovaClientV2()
 
   const state = useLocalObservable(() => ({
     loading: "Initializing" as string | null,
@@ -33,39 +32,80 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
   async function loadWandelApp() {
     state.nowLoading(`Loading controllers`)
 
-    let controllersRes
-    try {
-      /**
-       * TODO "The v2 endpoint currently only lists the names of connected controllers, not their configurations.
-       *  If you need the configuration of a controller, please use the v endpoint for now."
-       *  https://docs.wandelbots.io/26.1/api-maintained/migrationguide#use-v1-endpoints-for-these-functionalities
-       */
-      controllersRes = await nova.api.controller.listControllers()
+    /**
+     * New V2 list controllers
+     */
+    let controllers: string[] = []
 
-      console.log(controllersRes)
+    try {
+      controllers = await nova.api.controller.listRobotControllers()
     } catch (error) {
       console.error("Error: No connection to WandelAPI")
     }
 
-    const availableControllers = controllersRes?.instances || []
+    state.wandelApp = new WandelApp(nova, controllers)
 
-    console.log(`Available controllers:\n  `, availableControllers)
-
-    state.wandelApp = new WandelApp(novaV2, availableControllers)
-
+    /**
+     * No selected controller and designated motion group, try to
+     * select the first available ones
+     */
     if (!state.wandelApp.selectedMotionGroupId) {
-      // No saved motion group, try to select the first available
-      const motionGroup = state.wandelApp.motionGroupOptions[0]
-      if (motionGroup) {
+      const controller = state.wandelApp.controllers?.[0]
+      let motionGroup: string | null = null
+      let modelFromController: string | null = null
+      let controllerKind: string | null = null
+
+      if (controller) {
+        /**
+         * Fetch controller description (for the motionGroup name and controller kind)
+         */
+        try {
+          const controllerDescriptions =
+            await nova.api.controller.getControllerDescription(controller)
+          motionGroup =
+            controllerDescriptions.connected_motion_groups[0] ?? null
+
+          const controllerDetails =
+            await nova.api.controller.getRobotController(controller)
+          controllerKind = controllerDetails.configuration.kind
+        } catch (error) {
+          console.error("Error: No connection to WandelAPI")
+        }
+
+        /**
+         * Fetch motion group description (for the motion_group_model name)
+         */
+        if (motionGroup) {
+          try {
+            const motionGroupDescription =
+              await nova.api.motionGroup.getMotionGroupDescription(
+                controller,
+                motionGroup,
+              )
+            modelFromController = motionGroupDescription.motion_group_model
+          } catch (error) {
+            console.error("Error: No connection to WandelAPI")
+          }
+        }
+      }
+
+      /**
+       * Carry on, only if all required data is fetched successfully
+       * controller - controller name, eg. "abb-irb1200-7"
+       * motionGroup - motion group id of the controller, eg. "0@abb-irb1200-7"
+       * modelFromController = model name of the motion group, eg. "ABB_1200_07_7"
+       * controllerKind = type of controller, eg. "VirtualController"
+       */
+      if (controller && motionGroup && modelFromController && controllerKind) {
         state.nowLoading(`Configuring motion group`)
-        await state.wandelApp.selectMotionGroup(motionGroup.motion_group)
+        await state.wandelApp.selectMotionGroup(
+          controller,
+          controllerKind,
+          motionGroup,
+          modelFromController,
+        )
       }
     }
-
-    state.nowLoading(`Connecting programs runner`)
-    // TODO v2 check
-    // state.wandelApp.startProgramRunner()
-
   }
 
   async function tryLoadWandelApp() {

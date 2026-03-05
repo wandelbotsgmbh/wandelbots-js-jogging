@@ -1,10 +1,9 @@
 import {
-  DHParameter,
   JointTypeEnum,
-  KinematicModel,
+  type DHParameter,
+  type KinematicModel,
   type MotionGroupState,
   type NovaClient,
-  type RobotControllerConfiguration,
   type RobotControllerState,
 } from "@wandelbots/nova-js/v2"
 import {
@@ -12,13 +11,14 @@ import {
   type AutoReconnectingWebsocket,
 } from "@wandelbots/nova-js"
 import { makeAutoObservable, runInAction } from "mobx"
-import {
-  jointValuesEqual,
-  unwrapRotationVector,
-} from "@wandelbots/wandelbots-js-react-components"
-import { env } from "@/runtimeEnv"
+import { jointValuesEqual } from "@wandelbots/wandelbots-js-react-components"
 
 const MOTION_DELTA_THRESHOLD = 0.0001
+
+export interface SocketMessage {
+  receivedAt: number
+  data: RobotControllerState
+}
 
 export class ActiveRobot {
   /**
@@ -34,23 +34,17 @@ export class ActiveRobot {
   jointType: JointTypeEnum = JointTypeEnum.RevoluteJoint
 
   /**
-   *
-   */
-
-  /**
    * Last valid state message received from the controller
    * state socket
    */
-  lastValidStateMessage: {
-    receivedAt: number
-    data: RobotControllerState
-  }
+  lastValidStateMessage: SocketMessage
+  lastInvalidStateMessage: SocketMessage
 
   constructor(
     readonly nova: NovaClient,
     readonly modelFromController: string,
     readonly motionGroupId: string,
-    readonly controllerConfig: RobotControllerConfiguration,
+    readonly controllerKind: string,
     readonly initialControllerState: RobotControllerState,
     readonly controllerStateSocket: AutoReconnectingWebsocket,
   ) {
@@ -91,11 +85,10 @@ export class ActiveRobot {
 
       if (!data || !data.motion_groups) {
         runInAction(() => {
-          // TODO invalid message
-          // this.lastInvalidStateMessage = {
-          //   receivedAt: Date.now(),
-          //   data: event.data,
-          // }
+          this.lastInvalidStateMessage = {
+            receivedAt: Date.now(),
+            data: event.data,
+          }
         })
         return
       }
@@ -123,21 +116,6 @@ export class ActiveRobot {
 
       // handle motionState message
       if (shouldUpdate) {
-        // TODO check
-        //const oldFlangePose = this.rapidlyChangingMotionState.flange_pose
-        //const newFlangePose = newMotionState.flange_pose
-        //if (
-        //  oldFlangePose &&
-        //  newFlangePose &&
-        //  oldFlangePose.orientation &&
-        //  newFlangePose.orientation
-        //) {
-        //  newFlangePose.orientation = unwrapRotationVector(
-        //    newFlangePose.orientation,
-        //    oldFlangePose.orientation,
-        //  )
-        //}
-
         runInAction(() => {
           this.rapidlyChangingMotionState = newMotionState
         })
@@ -146,16 +124,8 @@ export class ActiveRobot {
   }
 
   get isVirtual() {
-    return true
-    // TODO bugfixing controllerConfig is undefined
-    // return this.controllerConfig.kind === "VirtualController"
+    return this.controllerKind === "VirtualController"
   }
-
-  /**
-  get motionGroupId() {
-    return this.motionGroup.motion_group
-  }
-    **/
 
   get controllerState() {
     return this.lastValidStateMessage.data
