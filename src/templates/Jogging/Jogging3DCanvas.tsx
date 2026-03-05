@@ -9,7 +9,6 @@ import {
 } from "@wandelbots/wandelbots-js-react-components"
 import { useActiveRobot } from "@/WandelAppContext"
 import { observer } from "mobx-react-lite"
-import { useEffect, useState } from "react"
 import { env } from "@/runtimeEnv"
 
 export const  Jogging3DCanvas: React.FC = observer(()=>  {
