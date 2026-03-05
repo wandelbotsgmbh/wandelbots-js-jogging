@@ -105,6 +105,12 @@ export class ActiveRobot {
       )
 
       if (!newMotionState) {
+        runInAction(() => {
+          this.lastInvalidStateMessage = {
+            receivedAt: Date.now(),
+            data: event.data,
+          }
+        })
         return
       }
 
