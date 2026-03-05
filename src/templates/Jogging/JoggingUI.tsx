@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { observer } from "mobx-react-lite"
-import { useTheme } from "@mui/material"
+import { Box, Divider, useTheme } from "@mui/material"
 
 import {
   JoggingPanel,
@@ -14,14 +14,14 @@ import { useActiveRobot, useWandelApp } from "../../WandelAppContext"
 
 export const JoggingUI = observer(() => {
   const activeRobot = useActiveRobot()
-  const { selectedMotionGroupId  } = useWandelApp()
+  const { selectedMotionGroupId } = useWandelApp()
   const theme = useTheme()
 
   const tcpPose = useMemo<Pose>(() => {
     return (
       activeRobot.rapidlyChangingMotionState.tcp_pose ?? {
-        position: [0,0,0],
-        orientation: [0,0,0],
+        position: [0, 0, 0],
+        orientation: [0, 0, 0],
       }
     )
   }, [activeRobot.rapidlyChangingMotionState])
@@ -37,23 +37,48 @@ export const JoggingUI = observer(() => {
         backgroundColor: theme.palette.backgroundPaperElevation?.[5],
         height: "100%",
         width: "100%",
+        overflow: "auto",
       }}
     >
-      <SafetyBar
-        isVirtual={activeRobot.isVirtual}
-        motionGroupId={activeRobot.motionGroupId}
-        operationMode={activeRobot.controllerState.operation_mode}
-        safetyState={activeRobot.controllerState.safety_state}
-      />
+      <Box
+        sx={{
+          position: "absolute",
+          padding: "0 12px",
+          top: "12px",
+          left: 0,
+        }}
+      >
+        <SafetyBar
+          isVirtual={activeRobot.isVirtual}
+          motionGroupId={activeRobot.motionGroupId}
+          operationMode={activeRobot.controllerState.operation_mode}
+          safetyState={activeRobot.controllerState.safety_state}
+        />
+      </Box>
       {selectedMotionGroupId && (
         <JoggingPanel
           nova={activeRobot.nova}
           motionGroupId={selectedMotionGroupId}
         />
       )}
-      <PoseCartesianValues tcpPose={tcpPose} />
 
-      <PoseJointValues joints={jointsPose} />
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          alignItems: "center",
+          marginBottom: "16px"
+        }}
+      >
+        <Divider
+          sx={{
+            maxWidth: "460px",
+          }}
+        />
+        <PoseCartesianValues tcpPose={tcpPose} />
+        <PoseJointValues joints={jointsPose} />
+      </Box>
     </div>
   )
 })

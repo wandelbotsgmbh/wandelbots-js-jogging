@@ -6,11 +6,25 @@ import { observer } from "mobx-react-lite"
 
 export const Jogging = observer(() => {
   return (
-    <Box sx={{ display: "flex", height: "100vh" }}>
-      <Box sx={{ flex: 2 }}>
+    <Box
+      sx={{
+        display: "flex",
+        height: "100vh",
+        background: "#303b51",
+      }}
+    >
+      <Box sx={{ flexGrow: 1 }}>
         <Jogging3DCanvas />
       </Box>
-      <Box sx={{ flex: 1 }}>
+      <Box
+        sx={{
+          width: "30%",
+          overflow: "auto",
+          borderRadius: "16px",
+          height: "calc(100%  12px)",
+          marginTop: "6px",
+        }}
+      >
         <JoggingUI />
       </Box>
     </Box>
