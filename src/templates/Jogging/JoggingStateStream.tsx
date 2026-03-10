@@ -5,19 +5,22 @@ import { radiansToDegrees } from "@wandelbots/nova-js"
 import { useActiveRobot } from "@/WandelAppContext"
 
 const stackStyling: StackOwnProps = {
-   direction: "column",
-   justifyContent: "flex-start",
-   alignItems: "flex-start",
-   spacing: 0.5,
-   letterSpacing: 0.6,
- }
+  direction: "column",
+  justifyContent: "flex-start",
+  alignItems: "flex-start",
+  spacing: 0.5,
+  letterSpacing: 0.6,
+  fontSize: "0.875rem",
+  color: "white",
+}
 
 export const JoggingStateStream = observer(() => {
   const activeRobot = useActiveRobot()
 
   const axisConfig = useMemo(() => {
-    return activeRobot.rapidlyChangingMotionState.joint_position
-      .filter(item => item !== undefined)
+    return activeRobot.rapidlyChangingMotionState.joint_position.filter(
+      (item) => item !== undefined,
+    )
   }, [activeRobot.rapidlyChangingMotionState])
 
   return [
@@ -31,6 +34,7 @@ export const JoggingStateStream = observer(() => {
       <span>{activeRobot.motionGroupId}</span>
     </Stack>,
     <Stack key={"axis-joints"} {...stackStyling}>
+      <span style={{ color: "#ffffff88" }}>Joints information:</span>
       {axisConfig.map((joint, index) => [
         <span key={index}>
           Joint {index + 1}: {Math.round(radiansToDegrees(joint))}°

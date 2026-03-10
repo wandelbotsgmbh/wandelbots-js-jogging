@@ -6,7 +6,6 @@ import {
   JoggingPanel,
   PoseCartesianValues,
   PoseJointValues,
-  SafetyBar,
 } from "@wandelbots/wandelbots-js-react-components"
 import type { Pose } from "@wandelbots/nova-js/v2"
 
@@ -32,12 +31,16 @@ export const JoggingUI = observer(() => {
   }, [activeRobot.rapidlyChangingMotionState])
 
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         backgroundColor: theme.palette.backgroundPaperElevation?.[5],
         height: "100%",
         width: "100%",
         overflow: "auto",
+
+        "& > .MuiStack-root": {
+          maxWidth: "100%",
+        },
       }}
     >
       {selectedMotionGroupId && (
@@ -53,7 +56,7 @@ export const JoggingUI = observer(() => {
           flexDirection: "column",
           gap: "16px",
           alignItems: "center",
-          marginBottom: "16px"
+          marginBottom: "16px",
         }}
       >
         <Divider
@@ -64,6 +67,6 @@ export const JoggingUI = observer(() => {
         <PoseCartesianValues tcpPose={tcpPose} />
         <PoseJointValues joints={jointsPose} />
       </Box>
-    </div>
+    </Box>
   )
 })
