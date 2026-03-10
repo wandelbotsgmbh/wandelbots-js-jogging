@@ -12,7 +12,7 @@ import { observer } from "mobx-react-lite"
 import { env } from "@/runtimeEnv"
 import { getSecureUrl } from "@/getWandelApi"
 
-export const  Jogging3DCanvas: React.FC = observer(()=>  {
+export const Jogging3DCanvas = observer(()=>  {
   Object3D.DEFAULT_UP = new Vector3(0, 0, 1)
   const activeRobot = useActiveRobot()
 
