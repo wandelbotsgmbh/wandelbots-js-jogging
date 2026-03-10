@@ -2,16 +2,18 @@
 
 import { getNovaClient } from "../../getWandelApi"
 import { observer, useLocalObservable } from "mobx-react-lite"
-import { useEffect, type ReactNode } from "react"
+import { useEffect, type ReactNode, useState } from "react"
 import { LoadingScreen } from "./LoadingScreen"
 import { WandelApp } from "../../WandelApp"
 import { WandelAppContext } from "../../WandelAppContext"
 
 export const WandelAppLoader = observer((props: { children: ReactNode }) => {
+  const [appMounted, setAppMounted] = useState<boolean>(false)
   const nova = getNovaClient()
 
   const state = useLocalObservable(() => ({
     loading: "Initializing" as string | null,
+    mounted: false as boolean,
     error: null as unknown | null,
     wandelApp: null as WandelApp | null,
 
@@ -69,7 +71,9 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
             await nova.api.controller.getRobotController(controller)
           controllerKind = controllerDetails.configuration.kind
         } catch (error) {
-          throw new Error("API Error: getControllerDescription, getRobotController requests failed")
+          throw new Error(
+            "API Error: getControllerDescription, getRobotController requests failed",
+          )
         }
 
         /**
@@ -120,8 +124,17 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
   }
 
   useEffect(() => {
+    state.mounted = true
     tryLoadWandelApp()
   }, [])
+
+  /**
+   * Prevents Next.js hydration mismatches by ensuring client-specific UI only renders after the initial mount.
+   * This avoids discrepancies between the server-rendered HTML and the first client-side render caused by immediate state changes.
+   */
+  if (!state.mounted) {
+    return <></>
+  }
 
   if (state.loading) {
     return <LoadingScreen message={state.loading} error={state.error} />
