@@ -2,13 +2,12 @@
 
 import { getNovaClient } from "../../getWandelApi"
 import { observer, useLocalObservable } from "mobx-react-lite"
-import { useEffect, type ReactNode, useState } from "react"
+import { useEffect, type ReactNode } from "react"
 import { LoadingScreen } from "./LoadingScreen"
 import { WandelApp } from "../../WandelApp"
 import { WandelAppContext } from "../../WandelAppContext"
 
 export const WandelAppLoader = observer((props: { children: ReactNode }) => {
-  const [appMounted, setAppMounted] = useState<boolean>(false)
   const nova = getNovaClient()
 
   const state = useLocalObservable(() => ({
