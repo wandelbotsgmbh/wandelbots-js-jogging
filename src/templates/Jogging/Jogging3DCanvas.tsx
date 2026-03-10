@@ -34,7 +34,7 @@ export const Jogging3DCanvas = observer(()=>  {
       camera={{
         position: [-2, 1, 1],
         rotation: new Euler(0, 0, 0),
-        fov: 25,
+        fov: 50,
       }}
       resize={{ debounce: 0, scroll: false }}
     >
