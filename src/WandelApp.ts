@@ -21,7 +21,7 @@ export class WandelApp {
     readonly nova: NovaClient,
     readonly controllers: string[],
   ) {
-    ;(window as any).wandelApp = this
+    (window as any).wandelApp = this
     makeAutoObservable(this)
   }
 
