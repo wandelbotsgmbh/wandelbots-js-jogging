@@ -1,16 +1,22 @@
 import React from "react"
-import { Jogging3DCanvas } from "./Jogging3DCanvas"
-import { JoggingUI } from "./JoggingUI"
 import { Box } from "@mui/material"
 import { observer } from "mobx-react-lite"
+import { useActiveRobot } from "@/WandelAppContext"
+import { SafetyBar } from "@wandelbots/wandelbots-js-react-components"
+
+import { Jogging3DCanvas } from "./Jogging3DCanvas"
+import { JoggingUI } from "./JoggingUI"
 
 export const Jogging = observer(() => {
+  const activeRobot = useActiveRobot()
+
   return (
     <Box
       sx={{
         display: "flex",
         height: "100vh",
         background: "#303b51",
+        positon: "relative",
       }}
     >
       <Box sx={{ flexGrow: 1 }}>
@@ -26,6 +32,21 @@ export const Jogging = observer(() => {
         }}
       >
         <JoggingUI />
+      </Box>
+      <Box
+        sx={{
+          position: "absolute",
+          padding: "0 12px",
+          top: "12px",
+          left: 0,
+        }}
+      >
+        <SafetyBar
+          isVirtual={activeRobot.isVirtual}
+          motionGroupId={activeRobot.motionGroupId}
+          operationMode={activeRobot.controllerState.operation_mode}
+          safetyState={activeRobot.controllerState.safety_state}
+        />
       </Box>
     </Box>
   )

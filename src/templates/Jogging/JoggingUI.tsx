@@ -40,21 +40,6 @@ export const JoggingUI = observer(() => {
         overflow: "auto",
       }}
     >
-      <Box
-        sx={{
-          position: "absolute",
-          padding: "0 12px",
-          top: "12px",
-          left: 0,
-        }}
-      >
-        <SafetyBar
-          isVirtual={activeRobot.isVirtual}
-          motionGroupId={activeRobot.motionGroupId}
-          operationMode={activeRobot.controllerState.operation_mode}
-          safetyState={activeRobot.controllerState.safety_state}
-        />
-      </Box>
       {selectedMotionGroupId && (
         <JoggingPanel
           nova={activeRobot.nova}

@@ -49,7 +49,7 @@ export class ActiveRobot {
     readonly controllerStateSocket: AutoReconnectingWebsocket,
   ) {
     /**
-     * Setting the rapidly chaning motion state including all position data
+     * Setting the rapidly changing motion state including all position data
      * of the rendered robot
      */
     this.rapidlyChangingMotionState =
