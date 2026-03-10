@@ -33,9 +33,6 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
   async function loadWandelApp() {
     state.nowLoading(`Loading controllers`)
 
-    /**
-     * New V2 list controllers
-     */
     let controllers: string[] = []
 
     try {
