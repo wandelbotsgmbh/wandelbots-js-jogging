@@ -40,7 +40,7 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
     try {
       controllers = await nova.api.controller.listRobotControllers()
     } catch (error) {
-      console.error("Error: No connection to WandelAPI")
+      throw new Error("API Error: listControllers request failed")
     }
 
     state.wandelApp = new WandelApp(nova, controllers)
@@ -69,7 +69,7 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
             await nova.api.controller.getRobotController(controller)
           controllerKind = controllerDetails.configuration.kind
         } catch (error) {
-          console.error("Error: No connection to WandelAPI")
+          throw new Error("API Error: getControllerDescription, getRobotController requests failed")
         }
 
         /**
@@ -84,7 +84,9 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
               )
             modelFromController = motionGroupDescription.motion_group_model
           } catch (error) {
-            console.error("Error: No connection to WandelAPI")
+            throw new Error(
+              "API Error: getMotionGroupDescription request failed",
+            )
           }
         }
       }
