@@ -7,11 +7,27 @@ export const getSecureUrl = (url: string): string => {
 	if (!url) {
 		return url;
 	}
-	return url.startsWith("http://") || url.startsWith("https://")
-		? url
-		: url.includes("wandelbots.io")
-			? `https://${url}`
-			: `http://${url}`;
+	if (url.startsWith("http://") || url.startsWith("https://")) {
+		return url;
+	}
+
+	let hostname = "";
+	try {
+		const parsed = new URL(
+			url.startsWith("http://") || url.startsWith("https://")
+				? url
+				: `http://${url}`,
+		);
+		hostname = parsed.hostname.toLowerCase();
+	} catch {
+		// Fallback: if URL parsing fails, treat as non-wandelbots and default to http
+		return `http://${url}`;
+	}
+
+	const isWandelbotsHost =
+		hostname === "wandelbots.io" || hostname.endsWith(".wandelbots.io");
+
+	return isWandelbotsHost ? `https://${url}` : `http://${url}`;
 };
 
 export const getNovaClient = () => {
