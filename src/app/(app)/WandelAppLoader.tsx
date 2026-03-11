@@ -1,83 +1,148 @@
-"use client"
+"use client";
 
-import { getNovaClient } from "../../getWandelApi"
-import { observer, useLocalObservable } from "mobx-react-lite"
-import { useEffect, type ReactNode } from "react"
-import { LoadingScreen } from "./LoadingScreen"
-import { WandelApp } from "../../WandelApp"
-import { WandelAppContext } from "../../WandelAppContext"
+import { observer, useLocalObservable } from "mobx-react-lite";
+import { type ReactNode, useEffect } from "react";
+import { getNovaClient } from "../../getWandelApi";
+import { WandelApp } from "../../WandelApp";
+import { WandelAppContext } from "../../WandelAppContext";
+import { LoadingScreen } from "./LoadingScreen";
 
 export const WandelAppLoader = observer((props: { children: ReactNode }) => {
-  const nova = getNovaClient()
+	const nova = getNovaClient();
 
-  const state = useLocalObservable(() => ({
-    loading: "Initializing" as string | null,
-    error: null as unknown | null,
-    wandelApp: null as WandelApp | null,
+	const state = useLocalObservable(() => ({
+		loading: "Initializing" as string | null,
+		mounted: false as boolean,
+		error: null as unknown | null,
+		wandelApp: null as WandelApp | null,
 
-    finishLoading() {
-      state.loading = null
-    },
+		finishLoading() {
+			state.loading = null;
+		},
 
-    nowLoading(message: string) {
-      state.loading = message
-    },
+		nowLoading(message: string) {
+			state.loading = message;
+		},
 
-    receiveError(error: unknown) {
-      console.error(error)
-      state.error = error
-    },
-  }))
+		receiveError(error: unknown) {
+			console.error(error);
+			state.error = error;
+		},
+	}));
 
-  async function loadWandelApp() {
-    state.nowLoading(`Loading controllers`)
+	async function loadWandelApp() {
+		state.mounted = true;
+		state.nowLoading(`Loading controllers`);
 
-    let controllersRes
-    try {
-      controllersRes = await nova.api.controller.listControllers()
-    } catch (error) {
-      console.error("Error: No connection to WandelAPI")
-    }
+		let controllers: string[] = [];
 
-    const availableControllers = controllersRes?.instances || []
+		try {
+			controllers = await nova.api.controller.listRobotControllers();
+		} catch (error) {
+			throw new Error("API Error: listControllers request failed", {
+				cause: error,
+			});
+		}
 
-    console.log(`Available controllers:\n  `, availableControllers)
+		state.wandelApp = new WandelApp(nova, controllers);
 
-    state.wandelApp = new WandelApp(nova, availableControllers)
+		/**
+		 * No selected controller and designated motion group, try to
+		 * select the first available ones
+		 */
+		if (!state.wandelApp.selectedMotionGroupId) {
+			const controller = state.wandelApp.controllers?.[0];
+			let motionGroup: string | null = null;
+			let modelFromController: string | null = null;
+			let controllerKind: string | null = null;
 
-    if (!state.wandelApp.selectedMotionGroupId) {
-      // No saved motion group, try to select the first available
-      const motionGroup = state.wandelApp.motionGroupOptions[0]
-      if (motionGroup) {
-        state.nowLoading(`Configuring motion group`)
-        await state.wandelApp.selectMotionGroup(motionGroup.motion_group)
-      }
-    }
+			if (controller) {
+				/**
+				 * Fetch controller description (for the motionGroup name and controller kind)
+				 */
+				try {
+					const controllerDescriptions =
+						await nova.api.controller.getControllerDescription(controller);
+					motionGroup =
+						controllerDescriptions.connected_motion_groups[0] ?? null;
 
-    state.nowLoading(`Connecting programs runner`)
-    state.wandelApp.startProgramRunner()
-  }
+					const controllerDetails =
+						await nova.api.controller.getRobotController(controller);
+					controllerKind = controllerDetails.configuration.kind;
+				} catch (error) {
+					throw new Error(
+						"API Error: getControllerDescription, getRobotController requests failed",
+						{ cause: error },
+					);
+				}
 
-  async function tryLoadWandelApp() {
-    try {
-      await loadWandelApp()
-      state.finishLoading()
-    } catch (error) {
-      state.receiveError(error)
-    }
-  }
+				/**
+				 * Fetch motion group description (for the motion_group_model name)
+				 */
+				if (motionGroup) {
+					try {
+						const motionGroupDescription =
+							await nova.api.motionGroup.getMotionGroupDescription(
+								controller,
+								motionGroup,
+							);
+						modelFromController = motionGroupDescription.motion_group_model;
+					} catch (error) {
+						throw new Error(
+							"API Error: getMotionGroupDescription request failed",
+							{ cause: error },
+						);
+					}
+				}
+			}
 
-  useEffect(() => {
-    tryLoadWandelApp()
-  }, [])
+			/**
+			 * Carry on, only if all required data is fetched successfully
+			 * controller - controller name, eg. "abb-irb1200-7"
+			 * motionGroup - motion group id of the controller, eg. "0@abb-irb1200-7"
+			 * modelFromController = model name of the motion group, eg. "ABB_1200_07_7"
+			 * controllerKind = type of controller, eg. "VirtualController"
+			 */
+			if (controller && motionGroup && modelFromController && controllerKind) {
+				state.nowLoading(`Configuring motion group`);
+				await state.wandelApp.selectMotionGroup(
+					controller,
+					controllerKind,
+					motionGroup,
+					modelFromController,
+				);
+			}
+		}
+	}
 
-  if (state.loading) {
-    return <LoadingScreen message={state.loading} error={state.error} />
-  }
+	async function tryLoadWandelApp() {
+		try {
+			await loadWandelApp();
+			state.finishLoading();
+		} catch (error) {
+			state.receiveError(error);
+		}
+	}
 
-  return (
-    <WandelAppContext.Provider value={state.wandelApp}>
-      {props.children}
-    </WandelAppContext.Provider>
-  )
-})
+	useEffect(() => {
+		tryLoadWandelApp();
+	}, []);
+
+	/**
+	 * Prevents Next.js hydration mismatches by ensuring client-specific UI only renders after the initial mount.
+	 * This avoids discrepancies between the server-rendered HTML and the first client-side render caused by immediate state changes.
+	 */
+	if (!state.mounted) {
+		return null;
+	}
+
+	if (state.loading) {
+		return <LoadingScreen message={state.loading} error={state.error} />;
+	}
+
+	return (
+		<WandelAppContext.Provider value={state.wandelApp}>
+			{props.children}
+		</WandelAppContext.Provider>
+	);
+});

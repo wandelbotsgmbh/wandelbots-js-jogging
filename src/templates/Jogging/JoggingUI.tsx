@@ -1,62 +1,64 @@
-import { useTheme } from "@mui/material"
-import { useActiveRobot, useWandelApp } from "../../WandelAppContext"
+import { Box, Divider, useTheme } from "@mui/material";
+import type { Pose } from "@wandelbots/nova-js/v2";
+
 import {
-  JoggingPanel,
-  SafetyBar,
-  PoseCartesianValues,
-  PoseJointValues,
-} from "@wandelbots/wandelbots-js-react-components"
-import { observer } from "mobx-react-lite"
-import type { Joints } from "@wandelbots/nova-js/v1"
+	JoggingPanel,
+	PoseCartesianValues,
+	PoseJointValues,
+} from "@wandelbots/wandelbots-js-react-components";
+import { observer } from "mobx-react-lite";
+
+import { useActiveRobot, useWandelApp } from "../../WandelAppContext";
 
 export const JoggingUI = observer(() => {
-  const wandelApp = useWandelApp()
-  const activeRobot = useActiveRobot()
-  const theme = useTheme()
+	const activeRobot = useActiveRobot();
+	const { selectedMotionGroupId } = useWandelApp();
+	const theme = useTheme();
 
-  return (
-    <div
-      style={{
-        backgroundColor: theme.palette.backgroundPaperElevation?.[5],
-        height: "100%",
-        width: "100%",
-      }}
-    >
-      <SafetyBar
-        isVirtual={activeRobot.isVirtual}
-        motionGroupId={activeRobot.motionGroupId}
-        operationMode={activeRobot.controllerState.operation_mode}
-        safetyState={activeRobot.controllerState.safety_state}
-      />
-      <JoggingPanel
-        nova={wandelApp.nova}
-        motionGroupId={activeRobot.motionGroupId}
-      />
+	const tcpPose: Pose = activeRobot.rapidlyChangingMotionState.tcp_pose ?? {
+		position: [0, 0, 0],
+		orientation: [0, 0, 0],
+	};
 
-      <PoseCartesianValues
-        tcpPose={(() => {
-          const motionState = activeRobot.rapidlyChangingMotionState
-          const state = motionState?.state
-          const tcpPose = state?.tcp_pose
+	const jointsPose = activeRobot.rapidlyChangingMotionState?.joint_position;
 
-          const pose = tcpPose || {
-            tcp: "TCP1",
-            position: { x: 0, y: 0, z: 0 },
-            orientation: { x: 0, y: 0, z: 0 },
-          }
-          return pose
-        })()}
-      />
-      <PoseJointValues
-        joints={(() => {
-          const motionState = activeRobot.rapidlyChangingMotionState
-          const state = motionState?.state
-          const joints = state?.joint_position
+	return (
+		<Box
+			sx={{
+				backgroundColor: theme.palette.backgroundPaperElevation?.[5],
+				height: "100%",
+				width: "100%",
+				overflow: "auto",
 
-          const pose = joints || ({ joints: [0, 0, 0, 0, 0, 0] } as Joints)
-          return pose
-        })()}
-      />
-    </div>
-  )
-})
+				"& > .MuiStack-root": {
+					maxWidth: "100%",
+				},
+			}}
+		>
+			{selectedMotionGroupId && (
+				<JoggingPanel
+					nova={activeRobot.nova}
+					motionGroupId={selectedMotionGroupId}
+				/>
+			)}
+
+			<Box
+				sx={{
+					display: "flex",
+					flexDirection: "column",
+					gap: "16px",
+					alignItems: "center",
+					marginBottom: "16px",
+				}}
+			>
+				<Divider
+					sx={{
+						maxWidth: "460px",
+					}}
+				/>
+				<PoseCartesianValues tcpPose={tcpPose} />
+				<PoseJointValues joints={jointsPose} />
+			</Box>
+		</Box>
+	);
+});
