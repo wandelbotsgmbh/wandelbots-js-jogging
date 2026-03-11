@@ -1,7 +1,6 @@
 import { Stack, type StackOwnProps } from "@mui/material";
 import { radiansToDegrees } from "@wandelbots/nova-js";
 import { observer } from "mobx-react-lite";
-import { useId } from "react";
 import { useActiveRobot } from "@/WandelAppContext";
 
 const stackStyling: StackOwnProps = {
@@ -31,14 +30,11 @@ export const JoggingStateStream = observer(() => {
 			</Stack>
 			<Stack key="axis-joints" {...stackStyling}>
 				<span style={{ color: "#ffffff88" }}>Joints information:</span>
-				{axisConfig.map((joint, index) => {
-					const id = useId();
-					return (
-						<span key={id}>
-							Joint {index + 1}: {Math.round(radiansToDegrees(joint))}°
-						</span>
-					);
-				})}
+				{axisConfig.map((joint, index) => (
+					<span key={index}>
+						Joint {index + 1}: {Math.round(radiansToDegrees(joint))}°
+					</span>
+				))}
 			</Stack>
 		</>
 	);
