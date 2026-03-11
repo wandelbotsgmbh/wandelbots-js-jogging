@@ -4,10 +4,7 @@ import { env } from "./runtimeEnv";
 let nova: NovaClient | null = null;
 
 export const getSecureUrl = (url: string): string => {
-	if (!url) {
-		return url;
-	}
-	if (url.startsWith("http://") || url.startsWith("https://")) {
+	if (!url || url.startsWith("http://") || url.startsWith("https://")) {
 		return url;
 	}
 
