@@ -12,8 +12,9 @@ import { observer } from "mobx-react-lite"
 import { env } from "@/runtimeEnv"
 import { getSecureUrl } from "@/getWandelApi"
 
+Object3D.DEFAULT_UP = new Vector3(0, 0, 1)
+
 export const Jogging3DCanvas = observer(()=>  {
-  Object3D.DEFAULT_UP = new Vector3(0, 0, 1)
   const activeRobot = useActiveRobot()
 
   const { gridSize, ...gridConfig } = {
