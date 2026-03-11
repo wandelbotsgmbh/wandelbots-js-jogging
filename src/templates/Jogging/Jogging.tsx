@@ -17,7 +17,7 @@ export const Jogging = observer(() => {
         display: "flex",
         height: "100vh",
         background: "#303b51",
-        positon: "relative",
+        position: "relative",
       }}
     >
       <Box sx={{ flexGrow: 1, maxWidth: "70%" }}>
