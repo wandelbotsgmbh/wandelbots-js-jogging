@@ -38,7 +38,7 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
     try {
       controllers = await nova.api.controller.listRobotControllers()
     } catch (error) {
-      throw new Error("API Error: listControllers request failed")
+      throw new Error("API Error: listControllers request failed", { cause: error })
     }
 
     state.wandelApp = new WandelApp(nova, controllers)
@@ -69,6 +69,7 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
         } catch (error) {
           throw new Error(
             "API Error: getControllerDescription, getRobotController requests failed",
+            { cause: error },
           )
         }
 
@@ -86,6 +87,7 @@ export const WandelAppLoader = observer((props: { children: ReactNode }) => {
           } catch (error) {
             throw new Error(
               "API Error: getMotionGroupDescription request failed",
+              { cause: error },
             )
           }
         }

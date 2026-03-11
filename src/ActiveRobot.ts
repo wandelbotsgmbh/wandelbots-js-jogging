@@ -159,6 +159,7 @@ export class ActiveRobot {
     } catch (err) {
       console.warn(
         `Failed to fetch kinematic model from API for ${modelFromController}, falling back to local config`,
+        err,
       )
     }
   }
