@@ -1,41 +1,45 @@
-import { observer } from "mobx-react-lite"
-import { Stack, type StackOwnProps } from "@mui/material"
-import { radiansToDegrees } from "@wandelbots/nova-js"
-import { useActiveRobot } from "@/WandelAppContext"
+import { Stack, type StackOwnProps } from "@mui/material";
+import { radiansToDegrees } from "@wandelbots/nova-js";
+import { observer } from "mobx-react-lite";
+import { useId } from "react";
+import { useActiveRobot } from "@/WandelAppContext";
 
 const stackStyling: StackOwnProps = {
-  direction: "column",
-  justifyContent: "flex-start",
-  alignItems: "flex-start",
-  spacing: 0.5,
-  letterSpacing: 0.6,
-  fontSize: "0.875rem",
-  color: "white",
-}
+	direction: "column",
+	justifyContent: "flex-start",
+	alignItems: "flex-start",
+	spacing: 0.5,
+	letterSpacing: 0.6,
+	fontSize: "0.875rem",
+	color: "white",
+};
 
 export const JoggingStateStream = observer(() => {
-  const activeRobot = useActiveRobot()
+	const activeRobot = useActiveRobot();
 
-  const axisConfig =
-    activeRobot.rapidlyChangingMotionState.joint_position.filter(
-      (item) => item !== undefined,
-    )
+	const axisConfig =
+		activeRobot.rapidlyChangingMotionState.joint_position.filter(
+			(item) => item !== undefined,
+		);
 
-  return (
-    <>
-      <Stack key="connected-with" {...stackStyling}>
-        <span style={{ color: "#ffffff88" }}>Connected with:</span>
-        <span>{activeRobot.modelFromController}</span>
-        <span>{activeRobot.motionGroupId}</span>
-      </Stack>
-      <Stack key="axis-joints" {...stackStyling}>
-        <span style={{ color: "#ffffff88" }}>Joints information:</span>
-        {axisConfig.map((joint, index) => (
-          <span key={index}>
-            Joint {index + 1}: {Math.round(radiansToDegrees(joint))}°
-          </span>
-        ))}
-      </Stack>
-    </>
-  )
-})
+	return (
+		<>
+			<Stack key="connected-with" {...stackStyling}>
+				<span style={{ color: "#ffffff88" }}>Connected with:</span>
+				<span>{activeRobot.modelFromController}</span>
+				<span>{activeRobot.motionGroupId}</span>
+			</Stack>
+			<Stack key="axis-joints" {...stackStyling}>
+				<span style={{ color: "#ffffff88" }}>Joints information:</span>
+				{axisConfig.map((joint, index) => {
+					const id = useId();
+					return (
+						<span key={id}>
+							Joint {index + 1}: {Math.round(radiansToDegrees(joint))}°
+						</span>
+					);
+				})}
+			</Stack>
+		</>
+	);
+});

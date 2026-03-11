@@ -1,74 +1,72 @@
-import { makeAutoObservable } from "mobx"
-import type { NovaClient, RobotControllerState } from "@wandelbots/nova-js/v2"
-import { ActiveRobot } from "@/ActiveRobot"
-import { tryParseJson } from "@wandelbots/nova-js"
+import { tryParseJson } from "@wandelbots/nova-js";
+import type { NovaClient, RobotControllerState } from "@wandelbots/nova-js/v2";
+import { makeAutoObservable } from "mobx";
+import { ActiveRobot } from "@/ActiveRobot";
 
 /**
  * Main store for the current state of the robot pad.
  */
 export class WandelApp {
-  controller: string | null = null
-  selectedMotionGroupId: string | null = null
-  modelFromController: string | null = null
-  controllerKind: string | null = null
+	controller: string | null = null;
+	selectedMotionGroupId: string | null = null;
+	modelFromController: string | null = null;
+	controllerKind: string | null = null;
 
-  /**
-   * Represents the current state of the selected motion group
-   * after setup and websocket connection */
-  activeRobot: ActiveRobot | null = null
+	/**
+	 * Represents the current state of the selected motion group
+	 * after setup and websocket connection */
+	activeRobot: ActiveRobot | null = null;
 
-  constructor(
-    readonly nova: NovaClient,
-    readonly controllers: string[],
-  ) {
-    (window as any).wandelApp = this
-    makeAutoObservable(this)
-  }
+	constructor(
+		readonly nova: NovaClient,
+		readonly controllers: string[],
+	) {
+		(window as any).wandelApp = this;
+		makeAutoObservable(this);
+	}
 
-  async selectMotionGroup(
-    controller: string,
-    controllerKind: string,
-    motionGroupId: string,
-    modelFromController: string,
-  ) {
-    this.controller = controller
-    this.selectedMotionGroupId = motionGroupId
-    this.modelFromController = modelFromController
-    this.controllerKind = controllerKind
+	async selectMotionGroup(
+		controller: string,
+		controllerKind: string,
+		motionGroupId: string,
+		modelFromController: string,
+	) {
+		this.controller = controller;
+		this.selectedMotionGroupId = motionGroupId;
+		this.modelFromController = modelFromController;
+		this.controllerKind = controllerKind;
 
-    if (controller && motionGroupId && modelFromController) {
-      /**
-       * Open the websocket to monitor controller state for e.g. e-stop
-       */
-      const controllerStateSocket = this.nova.openReconnectingWebsocket(
-        `/controllers/${controller}/state-stream`,
-      )
+		if (controller && motionGroupId && modelFromController) {
+			/**
+			 * Open the websocket to monitor controller state for e.g. e-stop
+			 */
+			const controllerStateSocket = this.nova.openReconnectingWebsocket(
+				`/controllers/${controller}/state-stream`,
+			);
 
-      /**
-       * Wait for the first message to get the initial state
-       */
-      const firstControllerMessage = await controllerStateSocket.firstMessage()
-      const initialControllerState = tryParseJson(firstControllerMessage.data)
-        ?.result as RobotControllerState
+			/**
+			 * Wait for the first message to get the initial state
+			 */
+			const firstControllerMessage = await controllerStateSocket.firstMessage();
+			const initialControllerState = tryParseJson(firstControllerMessage.data)
+				?.result as RobotControllerState;
 
-      /**
-       * Wait for the kinematic model of the robot before setting it as active
-       * and triggering the render
-       */
-      const activeRobot = new ActiveRobot(
-        this.nova,
-        this.modelFromController,
-        this.selectedMotionGroupId,
-        this.controllerKind,
-        initialControllerState,
-        controllerStateSocket
-      )
+			/**
+			 * Wait for the kinematic model of the robot before setting it as active
+			 * and triggering the render
+			 */
+			const activeRobot = new ActiveRobot(
+				this.nova,
+				this.modelFromController,
+				this.selectedMotionGroupId,
+				this.controllerKind,
+				initialControllerState,
+				controllerStateSocket,
+			);
 
-      await activeRobot.fetchKinematicModel(
-        this.modelFromController,
-      )
+			await activeRobot.fetchKinematicModel(this.modelFromController);
 
-      this.activeRobot = activeRobot
-    }
-  }
+			this.activeRobot = activeRobot;
+		}
+	}
 }
