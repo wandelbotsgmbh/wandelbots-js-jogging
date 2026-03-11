@@ -1,5 +1,4 @@
 import { observer } from "mobx-react-lite"
-import { useMemo } from "react"
 import { Stack, type StackOwnProps } from "@mui/material"
 import { radiansToDegrees } from "@wandelbots/nova-js"
 import { useActiveRobot } from "@/WandelAppContext"
@@ -17,11 +16,10 @@ const stackStyling: StackOwnProps = {
 export const JoggingStateStream = observer(() => {
   const activeRobot = useActiveRobot()
 
-  const axisConfig = useMemo(() => {
-    return activeRobot.rapidlyChangingMotionState.joint_position.filter(
+  const axisConfig =
+    activeRobot.rapidlyChangingMotionState.joint_position.filter(
       (item) => item !== undefined,
     )
-  }, [activeRobot.rapidlyChangingMotionState])
 
   return [
     <Stack key={"connection-status"} {...stackStyling}>

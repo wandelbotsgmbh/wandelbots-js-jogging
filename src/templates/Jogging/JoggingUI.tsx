@@ -1,4 +1,3 @@
-import { useMemo } from "react"
 import { observer } from "mobx-react-lite"
 import { Box, Divider, useTheme } from "@mui/material"
 
@@ -16,19 +15,13 @@ export const JoggingUI = observer(() => {
   const { selectedMotionGroupId } = useWandelApp()
   const theme = useTheme()
 
-  const tcpPose = useMemo<Pose>(() => {
-    return (
-      activeRobot.rapidlyChangingMotionState.tcp_pose ?? {
-        position: [0, 0, 0],
-        orientation: [0, 0, 0],
-      }
-    )
-  }, [activeRobot.rapidlyChangingMotionState])
+  const tcpPose: Pose =
+    activeRobot.rapidlyChangingMotionState.tcp_pose ?? {
+      position: [0, 0, 0],
+      orientation: [0, 0, 0],
+    }
 
-  const jointsPose = useMemo(() => {
-    const motionState = activeRobot.rapidlyChangingMotionState
-    return motionState?.joint_position
-  }, [activeRobot.rapidlyChangingMotionState])
+  const jointsPose = activeRobot.rapidlyChangingMotionState?.joint_position
 
   return (
     <Box
